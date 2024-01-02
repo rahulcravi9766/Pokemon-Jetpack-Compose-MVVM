@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.palette.graphics.Palette
 import com.example.pokemon.data.models.PokemonListEntry
+import com.example.pokemon.database.PokemonDao
 import com.example.pokemon.repository.PokemonRepository
 import com.example.pokemon.utils.Constants.PAGE_SIZE
 import com.example.pokemon.utils.Resources
@@ -22,7 +23,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PokemonListViewModel @Inject constructor(
-    private val repository: PokemonRepository
+    private val repository: PokemonRepository,
+    private val pokemonDao: PokemonDao
 ) : ViewModel() {
 
     private var curPage = 0
@@ -58,6 +60,9 @@ class PokemonListViewModel @Inject constructor(
                             ) else it.toString()
                         }, url, number?.toInt() ?: 0)
                     } ?: listOf()
+
+//                    val pokemonList
+//                    pokemonDao.insertAllPokemon()
                     curPage++
                     loadError.value = ""
                     isLoading.value = false
