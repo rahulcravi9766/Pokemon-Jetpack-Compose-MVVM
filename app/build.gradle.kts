@@ -90,8 +90,9 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
 
     // Coil
-    implementation("io.coil-kt:coil:2.4.0")
-    implementation("com.google.accompanist:accompanist-coil:0.7.0")
+    //implementation("io.coil-kt:coil:2.1.0")
+    implementation("io.coil-kt:coil-compose:2.4.0")
+   // implementation("com.google.accompanist:accompanist-coil:0.7.0")
 
 
     implementation("androidx.palette:palette-ktx:1.0.0")

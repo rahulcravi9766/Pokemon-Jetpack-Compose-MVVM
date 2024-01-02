@@ -3,6 +3,7 @@ package com.example.pokemon.viewmodel
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.capitalize
@@ -15,6 +16,7 @@ import com.example.pokemon.utils.Constants.PAGE_SIZE
 import com.example.pokemon.utils.Resources
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.util.Locale
 import javax.inject.Inject
 
@@ -37,6 +39,7 @@ class PokemonListViewModel @Inject constructor(
         viewModelScope.launch {
             isLoading.value = true
             val result = repository.getPokemonList(curPage * PAGE_SIZE, PAGE_SIZE)
+            Timber.tag("result").d("success ${result.data}")
             when (result) {
                 is Resources.Success -> {
                     endReached.value = curPage * PAGE_SIZE >= result.data?.count!!
@@ -46,6 +49,7 @@ class PokemonListViewModel @Inject constructor(
                         } else {
                             entry?.url?.takeLastWhile { it.isDigit() }
                         }
+                        Log.d("number","is $number")
                         val url =
                             "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png"
                         PokemonListEntry(entry?.name!!.replaceFirstChar {
