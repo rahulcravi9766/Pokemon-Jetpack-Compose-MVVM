@@ -9,5 +9,6 @@ data class PokemonListToCache(
     var number: Int,
     var pokemonName: String,
     var imageUrl: String,
+    var page: Int
 
 )

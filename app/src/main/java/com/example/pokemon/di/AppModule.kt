@@ -6,6 +6,7 @@ import androidx.room.Room
 import com.example.pokemon.data.remote.PokemonApi
 import com.example.pokemon.database.PokemonDao
 import com.example.pokemon.database.PokemonDatabase
+import com.example.pokemon.database.RemoteKeysDao
 import com.example.pokemon.repository.PokemonRepository
 import com.example.pokemon.utils.Constants.BASE_URL
 import dagger.Module
@@ -52,5 +53,10 @@ object AppModule {
     @Provides
     fun providePokemonDao(database: PokemonDatabase): PokemonDao {
         return database.pokemonDao()
+    }
+
+    @[Singleton Provides]
+    fun provideRemoteKeysDao(database: PokemonDatabase): RemoteKeysDao {
+        return database.remoteKeysDao()
     }
 }

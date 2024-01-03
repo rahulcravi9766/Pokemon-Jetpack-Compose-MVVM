@@ -70,7 +70,8 @@ class PokemonListViewModel @Inject constructor(
                         PokemonListToCache(
                             pokemonName = it.pokemonName,
                             imageUrl = it.imageUrl,
-                            number = it.number
+                            number = it.number,
+                            page = 0
                         )
                     }
 
