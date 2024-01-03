@@ -2,7 +2,6 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("kotlin-kapt")
-    id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
 }
 
@@ -72,9 +71,9 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     //Room
-    implementation("androidx.room:room-runtime:$room_version")
+    implementation("androidx.room:room-ktx:$room_version")
     annotationProcessor("androidx.room:room-compiler:$room_version")
-    ksp("androidx.room:room-compiler:$room_version")
+    kapt("androidx.room:room-compiler:$room_version")
 
     //Navigation
     implementation("androidx.navigation:navigation-compose:2.7.6")

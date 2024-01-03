@@ -11,7 +11,7 @@ interface  PokemonDao {
     @Insert
     suspend fun insertAllPokemon(pokemonList: PokemonListToCache)
 
-    @Query("SELECT * FROM pokemon_list_table")
-    suspend fun getAllPokemon(): List<PokemonListToCache>
+//    @Query("SELECT * FROM pokemon_list_table")
+//    suspend fun getAllPokemon(): List<PokemonListToCache>
 
 }

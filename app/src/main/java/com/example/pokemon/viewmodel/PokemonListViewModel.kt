@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.palette.graphics.Palette
 import com.example.pokemon.data.models.PokemonListEntry
+import com.example.pokemon.data.models.PokemonListToCache
 import com.example.pokemon.database.PokemonDao
 import com.example.pokemon.repository.PokemonRepository
 import com.example.pokemon.utils.Constants.PAGE_SIZE
@@ -61,7 +62,7 @@ class PokemonListViewModel @Inject constructor(
                         }, url, number?.toInt() ?: 0)
                     } ?: listOf()
 
-//                    val pokemonList
+//                    val pokemonListToSave = PokemonListToCache(pokemonName = )
 //                    pokemonDao.insertAllPokemon()
                     curPage++
                     loadError.value = ""

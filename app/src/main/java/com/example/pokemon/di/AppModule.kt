@@ -4,6 +4,7 @@ import android.content.Context
 import android.provider.DocumentsContract.Root
 import androidx.room.Room
 import com.example.pokemon.data.remote.PokemonApi
+import com.example.pokemon.database.PokemonDao
 import com.example.pokemon.database.PokemonDatabase
 import com.example.pokemon.repository.PokemonRepository
 import com.example.pokemon.utils.Constants.BASE_URL
@@ -45,5 +46,11 @@ object AppModule {
             context,
             PokemonDatabase::class.java, "pokemon_database"
         ).build()
+    }
+
+    @Singleton
+    @Provides
+    fun providePokemonDao(database: PokemonDatabase): PokemonDao {
+        return database.pokemonDao()
     }
 }
