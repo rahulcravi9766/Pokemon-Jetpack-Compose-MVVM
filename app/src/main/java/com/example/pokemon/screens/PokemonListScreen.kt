@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
@@ -52,11 +53,17 @@ import coil.compose.SubcomposeAsyncImageContent
 import com.example.pokemon.R
 import com.example.pokemon.data.models.PokemonListEntry
 import com.example.pokemon.viewmodel.PokemonListViewModel
+import kotlinx.coroutines.launch
 
 const val TAG = "MainScreen"
 
 @Composable
-fun PokemonListScreen(navController: NavController) {
+fun PokemonListScreen(
+    navController: NavController,
+    viewModel: PokemonListViewModel = hiltViewModel()
+) {
+
+    val scope = rememberCoroutineScope()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -69,6 +76,12 @@ fun PokemonListScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxWidth()
                 .align(CenterHorizontally)
+                .clickable(onClick = {
+                    scope.launch {
+                        //val data =   viewModel.getAllPokemon()
+                        Log.d("getAllPokemon", "${viewModel.getAllPokemon()}")
+                    }
+                })
         )
         Spacer(modifier = Modifier.padding(vertical = 10.dp))
         SearchBar(
@@ -76,13 +89,18 @@ fun PokemonListScreen(navController: NavController) {
                 .fillMaxWidth()
                 .padding(20.dp),
             hint = "Search"
-        )
+        ) {
+            scope.launch {
+                val searchedPokemonList = viewModel.searchPokemonByName(it)
+                Log.d("searchedList", "list is ${searchedPokemonList}")
+            }
+        }
         Spacer(modifier = Modifier.padding(top = 10.dp))
         PokemonList(navController = navController)
 
+
     }
 }
-
 
 @Composable
 fun SearchBar(
@@ -96,7 +114,6 @@ fun SearchBar(
     var isHintDisplayed by remember {
         mutableStateOf(hint != "")
     }
-
 
     Box(modifier = modifier) {
         BasicTextField(

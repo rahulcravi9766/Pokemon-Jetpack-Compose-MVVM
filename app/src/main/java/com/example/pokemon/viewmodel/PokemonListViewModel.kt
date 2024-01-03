@@ -6,7 +6,7 @@ import android.graphics.drawable.Drawable
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.capitalize
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.palette.graphics.Palette
@@ -17,7 +17,9 @@ import com.example.pokemon.repository.PokemonRepository
 import com.example.pokemon.utils.Constants.PAGE_SIZE
 import com.example.pokemon.utils.Resources
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.util.Locale
 import javax.inject.Inject
@@ -33,6 +35,7 @@ class PokemonListViewModel @Inject constructor(
     var loadError = mutableStateOf("")
     var isLoading = mutableStateOf(false)
     var endReached = mutableStateOf(false)
+    var pokemonListToCache = listOf<PokemonListToCache>()
 
     init {
         loadPokemonPaginated()
@@ -52,7 +55,7 @@ class PokemonListViewModel @Inject constructor(
                         } else {
                             entry?.url?.takeLastWhile { it.isDigit() }
                         }
-                        Log.d("number","is $number")
+
                         val url =
                             "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png"
                         PokemonListEntry(entry?.name!!.replaceFirstChar {
@@ -62,8 +65,18 @@ class PokemonListViewModel @Inject constructor(
                         }, url, number?.toInt() ?: 0)
                     } ?: listOf()
 
-//                    val pokemonListToSave = PokemonListToCache(pokemonName = )
-//                    pokemonDao.insertAllPokemon()
+
+                    pokemonListToCache = pokemonListEntry.mapIndexed { index, it ->
+                        PokemonListToCache(
+                            pokemonName = it.pokemonName,
+                            imageUrl = it.imageUrl,
+                            number = it.number
+                        )
+                    }
+
+                    Log.d("pokemonListToCache", "is $pokemonListToCache")
+                    pokemonDao.insertAllPokemon(pokemonListToCache)
+
                     curPage++
                     loadError.value = ""
                     isLoading.value = false
@@ -76,6 +89,16 @@ class PokemonListViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    suspend fun getAllPokemon(): List<PokemonListToCache> {
+        return pokemonDao.getAllPokemon()
+    }
+
+     suspend fun searchPokemonByName(name: String): List<PokemonListToCache> {
+       return  withContext(Dispatchers.IO) {
+             pokemonDao.searchPokemonByName(name)
+       }
     }
 
     fun calculateDominantColor(drawable: Drawable, onFinish: (Color) -> Unit) {
