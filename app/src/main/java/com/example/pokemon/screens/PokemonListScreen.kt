@@ -24,6 +24,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,12 +48,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImagePainter
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import com.example.pokemon.R
 import com.example.pokemon.data.models.PokemonListEntry
 import com.example.pokemon.viewmodel.PokemonListViewModel
+import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.launch
 
 const val TAG = "MainScreen"
@@ -64,6 +67,11 @@ fun PokemonListScreen(
 ) {
 
     val scope = rememberCoroutineScope()
+    val pokemonList = remember {
+        viewModel.getPagedPokemon()
+    }
+    val pagedList = pokemonList.collectAsLazyPagingItems()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -186,16 +194,19 @@ fun PokemonCardView(
         mutableStateOf(defaultDominantColor)
     }
 
+    val pokemonList = viewModel.getPagedPokemon().collectAsLazyPagingItems()
+
     Log.d(TAG, "color is $dominantColor")
-    val itemCount = details.size
+   // val itemCount = details.size
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         contentPadding = PaddingValues(20.dp),
         content = {
-            items(details.size) {
-                if (it >= itemCount - 1 && !endReached && !isLoading) {
-                    viewModel.loadPokemonPaginated()
-                }
+            items( count = pokemonList.itemCount) {
+
+//                if (it >= itemCount - 1 && !endReached && !isLoading) {
+//                    viewModel.loadPokemonPaginated()
+//                }
                 Box(
                     modifier = Modifier
                         .padding(10.dp)
@@ -211,14 +222,14 @@ fun PokemonCardView(
                             )
                         )
                         .clickable {
-                            navController.navigate("pokemon_detail_screen/${dominantColor.toArgb()}/${details[it].pokemonName}")
+                            navController.navigate("pokemon_detail_screen/${dominantColor.toArgb()}/${ pokemonList[it]?.pokemonName}")
                         },
                     contentAlignment = Center
                 ) {
                     Column(modifier = Modifier.fillMaxSize()) {
                         SubcomposeAsyncImage(
-                            model = details[it].imageUrl,
-                            contentDescription = details[it].pokemonName,
+                            model =  pokemonList[it]?.imageUrl,
+                            contentDescription =  pokemonList[it]?.pokemonName,
                             modifier = Modifier
                                 .size(120.dp)
                                 .align(CenterHorizontally)
@@ -235,7 +246,7 @@ fun PokemonCardView(
                         }
                         Spacer(modifier = Modifier.width(5.dp))
                         Text(
-                            text = details[it].pokemonName,
+                            text =  pokemonList[it]?.pokemonName ?: "",
                             fontFamily = FontFamily.SansSerif,
                             fontSize = 20.sp,
                             textAlign = TextAlign.Center,

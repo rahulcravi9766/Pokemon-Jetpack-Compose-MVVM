@@ -14,6 +14,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.create
@@ -26,8 +28,11 @@ object AppModule {
     @Singleton
     @Provides
     fun providePokemonRepository(
-        api: PokemonApi
-    ) = PokemonRepository(api)
+        api: PokemonApi,
+        pokemonDao: PokemonDao,
+        remoteKeysDao: RemoteKeysDao,
+        dispatcher: CoroutineDispatcher
+    ) = PokemonRepository(api, pokemonDao, remoteKeysDao, dispatcher)
 
     @Singleton
     @Provides
@@ -59,4 +64,7 @@ object AppModule {
     fun provideRemoteKeysDao(database: PokemonDatabase): RemoteKeysDao {
         return database.remoteKeysDao()
     }
+
+    @[Singleton Provides]
+    fun provideDispatcher(): CoroutineDispatcher = Dispatchers.IO
 }

@@ -75,6 +75,9 @@ dependencies {
     kapt("androidx.room:room-compiler:$room_version")
     implementation("androidx.room:room-paging:$room_version")
 
+    implementation("androidx.paging:paging-compose:3.2.1")
+
+
     //Navigation
     implementation("androidx.navigation:navigation-compose:2.7.6")
 

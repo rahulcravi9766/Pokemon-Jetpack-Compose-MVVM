@@ -9,15 +9,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.ExperimentalPagingApi
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import androidx.palette.graphics.Palette
 import com.example.pokemon.data.models.PokemonListEntry
 import com.example.pokemon.data.models.PokemonListToCache
+import com.example.pokemon.data.remote.PokemonApi
 import com.example.pokemon.database.PokemonDao
+import com.example.pokemon.database.RemoteKeysDao
 import com.example.pokemon.repository.PokemonRepository
 import com.example.pokemon.utils.Constants.PAGE_SIZE
+import com.example.pokemon.utils.PokemonRemoteMediator
 import com.example.pokemon.utils.Resources
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -38,7 +48,7 @@ class PokemonListViewModel @Inject constructor(
     var pokemonListToCache = listOf<PokemonListToCache>()
 
     init {
-        loadPokemonPaginated()
+      //  loadPokemonPaginated()
     }
 
     fun loadPokemonPaginated() {
@@ -66,17 +76,17 @@ class PokemonListViewModel @Inject constructor(
                     } ?: listOf()
 
 
-                    pokemonListToCache = pokemonListEntry.mapIndexed { index, it ->
-                        PokemonListToCache(
-                            pokemonName = it.pokemonName,
-                            imageUrl = it.imageUrl,
-                            number = it.number,
-                            page = 0
-                        )
-                    }
+//                    pokemonListToCache = pokemonListEntry.mapIndexed { index, it ->
+//                        PokemonListToCache(
+//                            pokemonName = it.pokemonName,
+//                            imageUrl = it.imageUrl,
+//                            number = it.number,
+//                            page = 0
+//                        )
+//                    }
 
                     Log.d("pokemonListToCache", "is $pokemonListToCache")
-                    pokemonDao.insertAllPokemon(pokemonListToCache)
+                  //  pokemonDao.insertAllPokemon(pokemonListToCache)
 
                     curPage++
                     loadError.value = ""
@@ -96,10 +106,10 @@ class PokemonListViewModel @Inject constructor(
         return pokemonDao.getAllPokemon()
     }
 
-     suspend fun searchPokemonByName(name: String): List<PokemonListToCache> {
-       return  withContext(Dispatchers.IO) {
-             pokemonDao.searchPokemonByName(name)
-       }
+    suspend fun searchPokemonByName(name: String): List<PokemonListToCache> {
+        return withContext(Dispatchers.IO) {
+            pokemonDao.searchPokemonByName(name)
+        }
     }
 
     fun calculateDominantColor(drawable: Drawable, onFinish: (Color) -> Unit) {
@@ -111,4 +121,8 @@ class PokemonListViewModel @Inject constructor(
             }
         }
     }
+
+    fun getPagedPokemon(): Flow<PagingData<PokemonListToCache>> =
+        repository.getPagedHouses().cachedIn(viewModelScope)
+
 }

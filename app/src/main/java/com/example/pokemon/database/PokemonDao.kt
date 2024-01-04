@@ -16,10 +16,18 @@ interface  PokemonDao {
     @Query("SELECT * FROM pokemon_list_table")
     suspend fun getAllPokemon(): List<PokemonListToCache>
 
-    @Query("SELECT * FROM pokemon_list_table ORDER BY page")
-    fun getAllPokemonByPageOrder(): PagingSource<Int, PokemonListToCache>
+
 
     @Query("SELECT * FROM pokemon_list_table WHERE pokemonName LIKE '%' || :name || '%'")
     fun searchPokemonByName(name: String): List<PokemonListToCache>
+
+    /**test for pagination    */
+
+
+    @Query("SELECT * FROM pokemon_list_table ORDER BY page")
+    fun getAllPokemonByPageOrder(): PagingSource<Int, PokemonListToCache>
+
+    @Query("DELETE FROM pokemon_list_table")
+    suspend fun deleteAllPokemon()
 
 }

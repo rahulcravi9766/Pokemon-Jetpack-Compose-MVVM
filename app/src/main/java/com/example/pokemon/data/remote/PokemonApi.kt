@@ -1,7 +1,10 @@
 package com.example.pokemon.data.remote
 
+import com.example.pokemon.data.models.PokemonListToCache
 import com.example.pokemon.data.remote.response.PokemonDetail
 import com.example.pokemon.data.remote.response.PokemonList
+import com.example.pokemon.utils.Resources
+import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -20,5 +23,14 @@ interface PokemonApi {
     suspend fun getPokemonDetails(
         @Path("name") name: String
     ): PokemonDetail
+
+    /**test api's for pagination */
+
+    @GET("pokemon")
+    suspend fun getPokemonListA(
+    @Query("offset") offset: Int,
+    @Query("limit") limit: Int
+    ): PokemonList
+
 
 }
