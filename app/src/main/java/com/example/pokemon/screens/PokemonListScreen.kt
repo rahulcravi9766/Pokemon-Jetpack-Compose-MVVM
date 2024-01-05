@@ -24,7 +24,8 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,14 +49,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.AsyncImagePainter
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import com.example.pokemon.R
-import com.example.pokemon.data.models.PokemonListEntry
+import com.example.pokemon.data.models.PokemonListToCache
 import com.example.pokemon.viewmodel.PokemonListViewModel
-import kotlinx.coroutines.flow.count
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 const val TAG = "MainScreen"
@@ -67,10 +69,10 @@ fun PokemonListScreen(
 ) {
 
     val scope = rememberCoroutineScope()
-    val pokemonList = remember {
-        viewModel.getPagedPokemon()
+    val isLoading by remember { viewModel.isLoading }
+    val searchedKey = remember {
+        mutableStateOf("")
     }
-    val pagedList = pokemonList.collectAsLazyPagingItems()
 
     Column(
         modifier = Modifier
@@ -84,12 +86,12 @@ fun PokemonListScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(CenterHorizontally)
-                .clickable(onClick = {
-                    scope.launch {
-                        //val data =   viewModel.getAllPokemon()
-                        Log.d("getAllPokemon", "${viewModel.getAllPokemon()}")
-                    }
-                })
+//                .clickable(onClick = {
+//                    scope.launch {
+//                        //val data =   viewModel.getAllPokemon()
+//                        //Log.d("getAllPokemon", "${viewModel.getAllPokemon()}")
+//                    }
+//                })
         )
         Spacer(modifier = Modifier.padding(vertical = 10.dp))
         SearchBar(
@@ -99,14 +101,17 @@ fun PokemonListScreen(
             hint = "Search"
         ) {
             scope.launch {
-                val searchedPokemonList = viewModel.searchPokemonByName(it)
-                Log.d("searchedList", "list is ${searchedPokemonList}")
+                if (it.length >= 2) {
+                    searchedKey.value = it
+                }
             }
         }
         Spacer(modifier = Modifier.padding(top = 10.dp))
-        PokemonList(navController = navController)
-
-
+        PokemonList(
+            navController = navController,
+            isLoading = isLoading,
+            searchedKey = searchedKey
+        )
     }
 }
 
@@ -156,14 +161,14 @@ fun SearchBar(
 @Composable
 fun PokemonList(
     navController: NavController,
-    viewModel: PokemonListViewModel = hiltViewModel()
+    viewModel: PokemonListViewModel = hiltViewModel(),
+    isLoading: Boolean,
+    searchedKey: MutableState<String>
 ) {
     val pokemonList by remember { viewModel.pokemonList }
     val loadError by remember { viewModel.loadError }
-    val isLoading by remember { viewModel.isLoading }
-
-
-    PokemonCardView(details = pokemonList, isLoading = isLoading, navController = navController)
+    Log.d("PokemonList", " called")
+    PokemonCardView(isLoading = isLoading, navController = navController, searchedKey = searchedKey)
 
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Center) {
         if (isLoading) {
@@ -183,10 +188,10 @@ fun PokemonList(
 
 @Composable
 fun PokemonCardView(
-    details: List<PokemonListEntry>,
     navController: NavController,
     viewModel: PokemonListViewModel = hiltViewModel(),
-    isLoading: Boolean
+    isLoading: Boolean,
+    searchedKey: MutableState<String>
 ) {
     val endReached by remember { viewModel.endReached }
     val defaultDominantColor = MaterialTheme.colorScheme.surface
@@ -194,19 +199,27 @@ fun PokemonCardView(
         mutableStateOf(defaultDominantColor)
     }
 
-    val pokemonList = viewModel.getPagedPokemon().collectAsLazyPagingItems()
+    val pokemonList = remember {
+        viewModel.getPagedPokemon()
+    }
+    val searchedList = remember {
+        viewModel.getSearchedPokemon("")
+    }
+    /**Search functionality is having issues */
+   // val searchedList = viewModel.getSearchedPokemon(searchedKey.value).collectAsLazyPagingItems()
+//    Log.d(TAG,z "searchedList ${searchedList.itemCount}" )
 
-    Log.d(TAG, "color is $dominantColor")
-   // val itemCount = details.size
+    val pagedPokemonList = pokemonList.collectAsLazyPagingItems()
+
+    pagedPokemonList.itemSnapshotList.items.mapIndexed { index, pokemonListToCache ->
+       Log.d(TAG, "index $index pokeList $pokemonListToCache" )
+   }
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         contentPadding = PaddingValues(20.dp),
         content = {
-            items( count = pokemonList.itemCount) {
+            items(pagedPokemonList.itemCount) {
 
-//                if (it >= itemCount - 1 && !endReached && !isLoading) {
-//                    viewModel.loadPokemonPaginated()
-//                }
                 Box(
                     modifier = Modifier
                         .padding(10.dp)
@@ -222,31 +235,46 @@ fun PokemonCardView(
                             )
                         )
                         .clickable {
-                            navController.navigate("pokemon_detail_screen/${dominantColor.toArgb()}/${ pokemonList[it]?.pokemonName}")
+                            navController.navigate("pokemon_detail_screen/${dominantColor.toArgb()}/${pagedPokemonList[it]?.pokemonName}")
                         },
                     contentAlignment = Center
                 ) {
                     Column(modifier = Modifier.fillMaxSize()) {
                         SubcomposeAsyncImage(
-                            model =  pokemonList[it]?.imageUrl,
-                            contentDescription =  pokemonList[it]?.pokemonName,
+                            model = pagedPokemonList[it]?.imageUrl,
+                            contentDescription = pagedPokemonList[it]?.pokemonName,
                             modifier = Modifier
                                 .size(120.dp)
                                 .align(CenterHorizontally)
                         ) {
-                            val state = painter.state
-                            if (state is AsyncImagePainter.State.Loading || state is AsyncImagePainter.State.Error) {
-                                CircularProgressIndicator(
-                                    color = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.scale(0.5f)
-                                )
-                            } else {
-                                SubcomposeAsyncImageContent()
+                            when (painter.state) {
+                                is AsyncImagePainter.State.Loading -> {
+                                    CircularProgressIndicator(
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.scale(0.5f)
+                                    )
+                                }
+
+                                is AsyncImagePainter.State.Error -> {
+                                    Box(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentAlignment = Center
+                                    ) {
+                                        Text(
+                                            text = "Image not available",
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
+                                }
+
+                                else -> {
+                                    SubcomposeAsyncImageContent()
+                                }
                             }
                         }
                         Spacer(modifier = Modifier.width(5.dp))
                         Text(
-                            text =  pokemonList[it]?.pokemonName ?: "",
+                            text = pagedPokemonList[it]?.pokemonName ?: "",
                             fontFamily = FontFamily.SansSerif,
                             fontSize = 20.sp,
                             textAlign = TextAlign.Center,
@@ -256,6 +284,11 @@ fun PokemonCardView(
                 }
             }
         })
+}
+
+@Composable
+fun VerticalGridView(){
+
 }
 
 @Composable

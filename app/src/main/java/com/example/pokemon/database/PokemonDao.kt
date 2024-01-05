@@ -19,7 +19,7 @@ interface  PokemonDao {
 
 
     @Query("SELECT * FROM pokemon_list_table WHERE pokemonName LIKE '%' || :name || '%'")
-    fun searchPokemonByName(name: String): List<PokemonListToCache>
+    fun searchPokemonByName(name: String): PagingSource<Int, PokemonListToCache>
 
     /**test for pagination    */
 

@@ -28,6 +28,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -46,9 +47,12 @@ class PokemonListViewModel @Inject constructor(
     var isLoading = mutableStateOf(false)
     var endReached = mutableStateOf(false)
     var pokemonListToCache = listOf<PokemonListToCache>()
+//    private val _pagingDataFlow = MutableStateFlow<PagingData<PokemonListToCache>>(PagingData.empty())
+//    var pagingDataFlow: Flow<PagingData<PokemonListToCache>> = _pagingDataFlow
+
 
     init {
-      //  loadPokemonPaginated()
+        //  loadPokemonPaginated()
     }
 
     fun loadPokemonPaginated() {
@@ -86,7 +90,7 @@ class PokemonListViewModel @Inject constructor(
 //                    }
 
                     Log.d("pokemonListToCache", "is $pokemonListToCache")
-                  //  pokemonDao.insertAllPokemon(pokemonListToCache)
+                    //  pokemonDao.insertAllPokemon(pokemonListToCache)
 
                     curPage++
                     loadError.value = ""
@@ -106,11 +110,11 @@ class PokemonListViewModel @Inject constructor(
         return pokemonDao.getAllPokemon()
     }
 
-    suspend fun searchPokemonByName(name: String): List<PokemonListToCache> {
-        return withContext(Dispatchers.IO) {
-            pokemonDao.searchPokemonByName(name)
-        }
-    }
+//    suspend fun searchPokemonByName(name: String): List<PokemonListToCache> {
+//        return withContext(Dispatchers.IO) {
+//            pokemonDao.searchPokemonByName(name)
+//        }
+//    }
 
     fun calculateDominantColor(drawable: Drawable, onFinish: (Color) -> Unit) {
 
@@ -123,6 +127,17 @@ class PokemonListViewModel @Inject constructor(
     }
 
     fun getPagedPokemon(): Flow<PagingData<PokemonListToCache>> =
-        repository.getPagedHouses().cachedIn(viewModelScope)
+        repository.getPagedPokemon().cachedIn(viewModelScope)
+
+
+    fun getSearchedPokemon(name: String): Flow<PagingData<PokemonListToCache>> {
+        val effe = repository.getSearchedPokemon(name).cachedIn(viewModelScope)
+        Log.d(TAG, "searchList $effe")
+        return effe
+    }
+
+    companion object{
+        const val TAG = "ViewModel"
+    }
 
 }

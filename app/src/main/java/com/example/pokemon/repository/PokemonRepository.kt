@@ -54,7 +54,7 @@ class PokemonRepository @Inject constructor(
 //    }
 
     @OptIn(ExperimentalPagingApi::class)
-    fun getPagedHouses(): Flow<PagingData<PokemonListToCache>> {
+    fun getPagedPokemon(): Flow<PagingData<PokemonListToCache>> {
         return Pager(
             initialKey = 1,
             config = PagingConfig(
@@ -64,6 +64,27 @@ class PokemonRepository @Inject constructor(
             ),
             pagingSourceFactory = {
                 pokemonDao.getAllPokemonByPageOrder()
+            },
+            remoteMediator = PokemonRemoteMediator(
+                pokemonDao = pokemonDao,
+                remoteKeysDao = remoteKeysDao,
+                api = api,
+                dispatcher = dispatcher
+            )
+        ).flow
+    }
+
+    @OptIn(ExperimentalPagingApi::class)
+    fun getSearchedPokemon(name: String): Flow<PagingData<PokemonListToCache>>{
+        return Pager(
+            initialKey = 1,
+            config = PagingConfig(
+                pageSize = Constants.PAGE_SIZE,
+                prefetchDistance = Constants.PAGE_SIZE / 4,
+                initialLoadSize = Constants.PAGE_SIZE
+            ),
+            pagingSourceFactory = {
+                pokemonDao.searchPokemonByName(name)
             },
             remoteMediator = PokemonRemoteMediator(
                 pokemonDao = pokemonDao,
