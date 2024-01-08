@@ -29,6 +29,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -47,6 +48,8 @@ class PokemonListViewModel @Inject constructor(
     var isLoading = mutableStateOf(false)
     var endReached = mutableStateOf(false)
     var pokemonListToCache = listOf<PokemonListToCache>()
+    var searchedPokemonList = mutableStateOf<Flow<PagingData<PokemonListToCache>>>(flowOf())
+
 //    private val _pagingDataFlow = MutableStateFlow<PagingData<PokemonListToCache>>(PagingData.empty())
 //    var pagingDataFlow: Flow<PagingData<PokemonListToCache>> = _pagingDataFlow
 
@@ -130,10 +133,8 @@ class PokemonListViewModel @Inject constructor(
         repository.getPagedPokemon().cachedIn(viewModelScope)
 
 
-    fun getSearchedPokemon(name: String): Flow<PagingData<PokemonListToCache>> {
-        val effe = repository.getSearchedPokemon(name).cachedIn(viewModelScope)
-        Log.d(TAG, "searchList $effe")
-        return effe
+    fun getSearchedPokemon(name: String) {
+        searchedPokemonList.value = repository.getSearchedPokemon(name).cachedIn(viewModelScope)
     }
 
     companion object{

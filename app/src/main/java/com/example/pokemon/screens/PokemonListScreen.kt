@@ -24,7 +24,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -49,15 +48,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.paging.compose.LazyPagingItems
+import androidx.paging.PagingData
 import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.flatMap
+import androidx.paging.map
 import coil.compose.AsyncImagePainter
 import coil.compose.SubcomposeAsyncImage
 import coil.compose.SubcomposeAsyncImageContent
 import com.example.pokemon.R
 import com.example.pokemon.data.models.PokemonListToCache
 import com.example.pokemon.viewmodel.PokemonListViewModel
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 const val TAG = "MainScreen"
@@ -73,6 +75,8 @@ fun PokemonListScreen(
     val searchedKey = remember {
         mutableStateOf("")
     }
+
+
 
     Column(
         modifier = Modifier
@@ -101,9 +105,10 @@ fun PokemonListScreen(
             hint = "Search"
         ) {
             scope.launch {
-                if (it.length >= 2) {
+//                if (it.length >= 2) {
                     searchedKey.value = it
-                }
+                     viewModel.getSearchedPokemon(it)
+//                }
             }
         }
         Spacer(modifier = Modifier.padding(top = 10.dp))
@@ -198,28 +203,36 @@ fun PokemonCardView(
     val dominantColor by remember {
         mutableStateOf(defaultDominantColor)
     }
-
     val pokemonList = remember {
         viewModel.getPagedPokemon()
     }
-    val searchedList = remember {
-        viewModel.getSearchedPokemon("")
-    }
-    /**Search functionality is having issues */
-   // val searchedList = viewModel.getSearchedPokemon(searchedKey.value).collectAsLazyPagingItems()
-//    Log.d(TAG,z "searchedList ${searchedList.itemCount}" )
 
+    val searchedPokemonList = remember {
+        viewModel.searchedPokemonList
+    }
+    val pagedSearchedPokemonList = searchedPokemonList.value.collectAsLazyPagingItems()
     val pagedPokemonList = pokemonList.collectAsLazyPagingItems()
 
-    pagedPokemonList.itemSnapshotList.items.mapIndexed { index, pokemonListToCache ->
-       Log.d(TAG, "index $index pokeList $pokemonListToCache" )
-   }
+
+//    Log.d(TAG, "searchedKey ${searchedKey.value}" )
+//    pagedSearchedPokemonList.itemSnapshotList.items.mapIndexed { index, searchedListToCache ->
+//       Log.d(TAG, "index $index searchedList $searchedListToCache" )
+//   }
+    val newList = if (pagedSearchedPokemonList.itemSnapshotList.items.isNotEmpty() && searchedKey.value.isNotEmpty()){
+        pagedSearchedPokemonList
+    }else{
+        pagedPokemonList
+    }
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
         contentPadding = PaddingValues(20.dp),
         content = {
-            items(pagedPokemonList.itemCount) {
-
+            if (newList.itemSnapshotList.isEmpty()){
+                item {
+                    Text(text = "No Pokemon found", modifier = Modifier.fillMaxSize(), textAlign = TextAlign.Center)
+                }
+            }
+            items(newList.itemCount) {
                 Box(
                     modifier = Modifier
                         .padding(10.dp)
@@ -235,14 +248,14 @@ fun PokemonCardView(
                             )
                         )
                         .clickable {
-                            navController.navigate("pokemon_detail_screen/${dominantColor.toArgb()}/${pagedPokemonList[it]?.pokemonName}")
+                            navController.navigate("pokemon_detail_screen/${dominantColor.toArgb()}/${newList[it]?.pokemonName}")
                         },
                     contentAlignment = Center
                 ) {
                     Column(modifier = Modifier.fillMaxSize()) {
                         SubcomposeAsyncImage(
-                            model = pagedPokemonList[it]?.imageUrl,
-                            contentDescription = pagedPokemonList[it]?.pokemonName,
+                            model = newList[it]?.imageUrl,
+                            contentDescription = newList[it]?.pokemonName,
                             modifier = Modifier
                                 .size(120.dp)
                                 .align(CenterHorizontally)
@@ -274,7 +287,7 @@ fun PokemonCardView(
                         }
                         Spacer(modifier = Modifier.width(5.dp))
                         Text(
-                            text = pagedPokemonList[it]?.pokemonName ?: "",
+                            text = newList[it]?.pokemonName ?: "",
                             fontFamily = FontFamily.SansSerif,
                             fontSize = 20.sp,
                             textAlign = TextAlign.Center,
@@ -286,10 +299,7 @@ fun PokemonCardView(
         })
 }
 
-@Composable
-fun VerticalGridView(){
 
-}
 
 @Composable
 fun RetryButton(error: String, onRetryClick: () -> Unit) {
