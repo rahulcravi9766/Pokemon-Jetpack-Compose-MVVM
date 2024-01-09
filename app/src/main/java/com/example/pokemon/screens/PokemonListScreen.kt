@@ -300,7 +300,6 @@ fun PokemonCardView(
 }
 
 
-
 @Composable
 fun RetryButton(error: String, onRetryClick: () -> Unit) {
     Column {

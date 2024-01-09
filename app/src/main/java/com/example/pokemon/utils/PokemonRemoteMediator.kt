@@ -76,43 +76,43 @@ class PokemonRemoteMediator @Inject constructor(
                 val endOfPagination = pokemonList?.isEmpty()
 
 
-                        if (pokemonList?.isNotEmpty() == true) {
-                            if (loadType == LoadType.REFRESH) {
-                                remoteKeysDao.deleteRemoteKeys()
-                                pokemonDao.deleteAllPokemon()
-                            }
-                            val prevKey = if (page > 1) page - 1 else null
-                            val nextKey = if (endOfPagination!!) null else page + 1
-                            val remoteKeys = pokemonList.mapIndexed { _, item ->
-                                 val  number = if (item?.url?.endsWith("/") == true) {
-                                    item.url.dropLast(1).takeLastWhile { it.isDigit() }
-                                } else {
-                                     item?.url?.takeLastWhile { it.isDigit() }
-                                 }
-                                RemoteKeys(
-                                    id = number?.toInt() ?: 0,
-                                    prevKey = prevKey,
-                                    currentPage = page,
-                                    nextKey = nextKey
-                                )
-                            }
-                            val pokemonListEntry = pokemonList.mapIndexed { _, item ->
-                                val number = if (item?.url?.endsWith("/") == true) {
-                                    item.url.dropLast(1).takeLastWhile { it.isDigit() }
-                                } else {
-                                    item?.url?.takeLastWhile { it.isDigit() }
-                                }
-                                val url =
-                                    "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png"
-                                PokemonListToCache(pokemonName = item?.name!!.replaceFirstChar {
-                                    if (it.isLowerCase()) it.titlecase(
-                                        Locale.ROOT
-                                    ) else it.toString()
-                                }, imageUrl = url, number = number?.toInt() ?: 0, page = page)
-                            }
-                            remoteKeysDao.insertAll(remoteKeys)
-                            pokemonDao.insertAllPokemon(pokemonListEntry)
+                if (pokemonList?.isNotEmpty() == true) {
+                    if (loadType == LoadType.REFRESH) {
+                        remoteKeysDao.deleteRemoteKeys()
+                        pokemonDao.deleteAllPokemon()
+                    }
+                    val prevKey = if (page > 1) page - 1 else null
+                    val nextKey = if (endOfPagination!!) null else page + 1
+                    val remoteKeys = pokemonList.mapIndexed { _, item ->
+                        val number = if (item?.url?.endsWith("/") == true) {
+                            item.url.dropLast(1).takeLastWhile { it.isDigit() }
+                        } else {
+                            item?.url?.takeLastWhile { it.isDigit() }
                         }
+                        RemoteKeys(
+                            id = number?.toInt() ?: 0,
+                            prevKey = prevKey,
+                            currentPage = page,
+                            nextKey = nextKey
+                        )
+                    }
+                    val pokemonListEntry = pokemonList.mapIndexed { _, item ->
+                        val number = if (item?.url?.endsWith("/") == true) {
+                            item.url.dropLast(1).takeLastWhile { it.isDigit() }
+                        } else {
+                            item?.url?.takeLastWhile { it.isDigit() }
+                        }
+                        val url =
+                            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${number}.png"
+                        PokemonListToCache(pokemonName = item?.name!!.replaceFirstChar {
+                            if (it.isLowerCase()) it.titlecase(
+                                Locale.ROOT
+                            ) else it.toString()
+                        }, imageUrl = url, number = number?.toInt() ?: 0, page = page)
+                    }
+                    remoteKeysDao.insertAll(remoteKeys)
+                    pokemonDao.insertAllPokemon(pokemonListEntry)
+                }
 
                 MediatorResult.Success(endOfPaginationReached = endOfPagination!!)
 
